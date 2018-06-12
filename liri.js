@@ -1,4 +1,5 @@
 require("dotenv").config();
+var fs = require("fs");
 var Spotify = require('node-spotify-api');
 var Twitter = require('twitter');
 var request = require('request');
@@ -6,13 +7,9 @@ var keys = require("./keys.js");
 var spotify = new Spotify(keys.spotify);
 var twitter = new Twitter(keys.twitter);
 // console.log(spotify);
+var q;
 
-
-
-
-var query = process.argv[2];
-
-if( query === "my-tweets"){
+function twitterf(){
     var params = {count: 20};
     twitter.get('statuses/user_timeline', params, function(error, tweets, response) {
     if (!error) {
@@ -24,9 +21,11 @@ if( query === "my-tweets"){
 });
 
 
-}else if( query === "spotify-this-song"){
-    //MAKE SURE TO ADD A DEFAULT
-    spotify.search({type: "track", query: process.argv[3], limit: 3}, function(err, data){
+}
+
+function spotifyf(){
+     //MAKE SURE TO ADD A DEFAULT
+     spotify.search({type: "track", query: q, limit: 3}, function(err, data){
         if(!err){
             var song = data.tracks.items[0];
             console.log("Artist: " + song.artists[0].name);
@@ -35,9 +34,11 @@ if( query === "my-tweets"){
             console.log("Album: " + song.album.name);
         }
     })
+}
 
-}else if (query === "movie-this"){
-    request("http://www.omdbapi.com/?apikey=trilogy&t=Clone+Wars", function(error, response, body) {
+function movief(){
+    
+    request("http://www.omdbapi.com/?apikey=trilogy&t="+q, function(error, response, body) {
     // console.log(JSON.parse(body).Title);
     body = JSON.parse(body);
     console.log("Title: " + body.Title);
@@ -50,9 +51,51 @@ if( query === "my-tweets"){
     console.log("Starring: " + body.Actors);
 });
 
-}else if(query === "do-what-it-says"){
+}
 
+function dof(){
+    fs.readFile("random.txt", "utf8", function(err, data){
+        if(!err){
+            var query = data.split(",")[0];
+
+            if( query === "my-tweets"){
+                twitterf();
+            }
+            else if( query === "spotify-this-song"){
+                q = data.split(",")[1];
+                spotifyf();
+
+            }
+            else if (query === "movie-this"){
+                q = data.split(",")[1];
+                movief();
+            }
+            else{
+                console.log("Try a different command");
+            }
+
+        }
+    })
+}
+
+var query = process.argv[2];
+
+if( query === "my-tweets"){
+    twitterf();
+}
+else if( query === "spotify-this-song"){
+    q = process.argv[3];
+   spotifyf();
+
+}
+else if (query === "movie-this"){
+    q = process.argv[3].replace(/\ /g, "+");
+    movief();
+}
+else if(query === "do-what-it-says"){
+   dof();
 }
 else{
     console.log("Try a different command");
 }
+
